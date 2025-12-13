@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Copies the contents of a batch array
 func (b *Batch[T]) copy() []T {
 	return append([]T(nil), b.batch...)
 }
@@ -33,8 +34,11 @@ func (b *Batch[T]) Add(item T) error {
 //
 // This means all items will be removed from the batch
 // and the muted will NOT be locked to do so.
+// Therefore, this is for internal use only.
 //
-// The batch will be
+// The batch will be reset after the operation if successful.
+//
+// If failed, the batch will NOT be reset, and an error returned.
 func (b *Batch[T]) flushUnsafe() error {
 	batchCopy := b.copy()
 	err := b.onFlush(batchCopy)

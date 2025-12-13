@@ -15,6 +15,7 @@ func InitBatch[T any](cap uint32, flushInterval time.Duration, onFlush FlushFunc
 		cap:           cap,
 		onFlush:       onFlush,
 		fullChan:      make(chan struct{}),
+		stopChan:      make(chan struct{}),
 		batchOpen:     false,
 		flushInterval: flushInterval,
 		ticker:        nil,
@@ -48,6 +49,8 @@ func (b *Batch[T]) Open() error {
 
 // Start the batch ticker
 //
+// # The batch ticker is automatically set once started
+//
 // It is assumed that this is called with the mutex locked
 // It is also assumed that this is not called more than once
 func (b *Batch[T]) startTicker() error {
@@ -59,6 +62,8 @@ func (b *Batch[T]) startTicker() error {
 	go func() {
 		for {
 			select {
+			case <-b.stopChan:
+				return
 			// ticker went off or batch is full. flush those items!
 			case <-b.fullChan:
 			case <-b.ticker.C:
@@ -81,10 +86,12 @@ func (b *Batch[T]) Close() error {
 		return fmt.Errorf("batch is already closed")
 	}
 
+	b.stopChan <- struct{}{}
 	b.flushUnsafe()
 	b.ticker.Stop()
 	b.ticker = nil
 	close(b.fullChan)
+	close(b.stopChan)
 	b.batchOpen = false
 	return nil
 }

@@ -20,6 +20,9 @@ type Batch[T any] struct {
 	// Signal when the batch is full, will be emptied after
 	fullChan chan struct{}
 
+	// Signals to the current running goroutine to stop
+	stopChan chan struct{}
+
 	batchOpen bool
 
 	// Function passed in from the init method
