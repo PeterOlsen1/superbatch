@@ -20,9 +20,6 @@ type Batch[T any] struct {
 	// Signal when the batch is full, will be emptied after
 	fullChan chan struct{}
 
-	// Signal when the batch is closed
-	closeChan chan struct{}
-
 	batchOpen bool
 
 	// Function passed in from the init method
@@ -35,4 +32,6 @@ type Batch[T any] struct {
 	lastFlushed time.Time
 
 	flushInterval time.Duration
+
+	ticker *time.Ticker
 }

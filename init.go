@@ -15,9 +15,9 @@ func InitBatch[T any](cap uint32, flushInterval time.Duration, onFlush FlushFunc
 		cap:           cap,
 		onFlush:       onFlush,
 		fullChan:      make(chan struct{}),
-		closeChan:     make(chan struct{}),
 		batchOpen:     false,
 		flushInterval: flushInterval,
+		ticker:        nil,
 	}
 
 	b.Open()
@@ -37,23 +37,31 @@ func (b *Batch[T]) Open() error {
 
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	b.batchOpen = true
+	err := b.startTicker()
+	if err != nil {
+		return err
+	}
 
-	batchTicker := time.NewTicker(b.flushInterval)
+	b.batchOpen = true
+	return nil
+}
+
+// Start the batch ticker
+//
+// It is assumed that this is called with the mutex locked
+// It is also assumed that this is not called more than once
+func (b *Batch[T]) startTicker() error {
+	if b.ticker != nil {
+		return fmt.Errorf("ticker is not nil")
+	}
+
+	b.ticker = time.NewTicker(b.flushInterval)
 	go func() {
 		for {
 			select {
-			// batch has closed, flush all items and close channels
-			case <-b.closeChan:
-				b.Flush()
-				batchTicker.Stop()
-				close(b.closeChan)
-				close(b.fullChan)
-				return
-
 			// ticker went off or batch is full. flush those items!
 			case <-b.fullChan:
-			case <-batchTicker.C:
+			case <-b.ticker.C:
 				b.Flush()
 			}
 		}
@@ -73,7 +81,10 @@ func (b *Batch[T]) Close() error {
 		return fmt.Errorf("batch is already closed")
 	}
 
-	b.closeChan <- struct{}{}
+	b.flushUnsafe()
+	b.ticker.Stop()
+	b.ticker = nil
+	close(b.fullChan)
 	b.batchOpen = false
 	return nil
 }
