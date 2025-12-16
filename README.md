@@ -48,5 +48,3 @@ time.Sleep(8 * time.Millisecond)
 newTimeout := 5 * time.Millisecond
 b.SetTimeout(&newTimeout) // this will flush, since the current timeout is at 5 seconds
 ```
-
-(i need to actually implement the timeout one)
