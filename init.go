@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func InitBatch[T any](cap uint32, flushInterval time.Duration, onFlush FlushFunc[T]) (*Batch[T], error) {
+func InitBatch[T any](cap uint32, flushInterval *time.Duration, onFlush FlushFunc[T]) (*Batch[T], error) {
 	if cap == 0 {
 		return nil, fmt.Errorf("capacity cannot be 0")
 	}
@@ -17,7 +17,7 @@ func InitBatch[T any](cap uint32, flushInterval time.Duration, onFlush FlushFunc
 		fullChan:      make(chan struct{}),
 		stopChan:      make(chan struct{}),
 		batchOpen:     false,
-		flushInterval: &flushInterval,
+		flushInterval: flushInterval,
 		ticker:        nil,
 	}
 
