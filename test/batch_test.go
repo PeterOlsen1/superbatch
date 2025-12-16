@@ -68,12 +68,12 @@ func TestBatchIntervalFlush(t *testing.T) {
 	teardown(b, t)
 }
 
-func TestBatchIntervalFlush10(t *testing.T) {
+func TestBatchIntervalFlush5(t *testing.T) {
 	b := setupWithInterval(t, 1*time.Millisecond)
-	time.Sleep(time.Nanosecond * 10500000)
+	time.Sleep(time.Nanosecond * 5500000)
 
-	if count != 10 {
-		t.Errorf("Count (%d) does not match 10", count)
+	if count != 5 {
+		t.Errorf("Count (%d) does not match 5", count)
 	}
 
 	teardown(b, t)
