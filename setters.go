@@ -5,7 +5,7 @@ import "time"
 // Sets the current flush interval.
 //
 // If the batch is open: flush, stop ticker, update
-func (b *Batch[T]) SetFlushInterval(newInterval time.Duration) error {
+func (b *Batch[T]) SetFlushInterval(newInterval *time.Duration) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 

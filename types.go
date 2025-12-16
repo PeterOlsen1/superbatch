@@ -34,7 +34,9 @@ type Batch[T any] struct {
 	// The time the batch was last flushed
 	lastFlushed time.Time
 
-	flushInterval time.Duration
+	// Dictates how often the batch is flushed.
+	// Pass in nil for no intervals
+	flushInterval *time.Duration
 
 	ticker *time.Ticker
 }

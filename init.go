@@ -17,7 +17,7 @@ func InitBatch[T any](cap uint32, flushInterval time.Duration, onFlush FlushFunc
 		fullChan:      make(chan struct{}),
 		stopChan:      make(chan struct{}),
 		batchOpen:     false,
-		flushInterval: flushInterval,
+		flushInterval: &flushInterval,
 		ticker:        nil,
 	}
 
@@ -58,19 +58,32 @@ func (b *Batch[T]) startTicker() error {
 		return fmt.Errorf("ticker is not nil")
 	}
 
-	b.ticker = time.NewTicker(b.flushInterval)
-	go func() {
-		for {
-			select {
-			case <-b.stopChan:
-				return
-			// ticker went off or batch is full. flush those items!
-			case <-b.fullChan:
-			case <-b.ticker.C:
-				b.Flush()
+	if b.flushInterval != nil {
+		b.ticker = time.NewTicker(*b.flushInterval)
+		go func() {
+			for {
+				select {
+				case <-b.stopChan:
+					return
+				// ticker went off or batch is full. flush those items!
+				case <-b.fullChan:
+				case <-b.ticker.C:
+					b.Flush()
+				}
 			}
-		}
-	}()
+		}()
+	} else {
+		go func() {
+			for {
+				select {
+				case <-b.stopChan:
+					return
+				case <-b.fullChan:
+					b.Flush()
+				}
+			}
+		}()
+	}
 
 	return nil
 }
