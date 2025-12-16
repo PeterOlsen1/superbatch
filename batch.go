@@ -33,7 +33,7 @@ func (b *Batch[T]) Add(item T) error {
 // Unsafe flush.
 //
 // This means all items will be removed from the batch
-// and the muted will NOT be locked to do so.
+// and the mutex will NOT be locked to do so.
 // Therefore, this is for internal use only.
 //
 // The batch will be reset after the operation if successful.
@@ -46,6 +46,7 @@ func (b *Batch[T]) flushUnsafe() error {
 		return err
 	}
 
+	b.lastFlushed = time.Now()
 	b.batch = make([]T, 0, b.cap)
 	return nil
 }
@@ -58,7 +59,6 @@ func (b *Batch[T]) Flush() error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	b.lastFlushed = time.Now()
 	return b.flushUnsafe()
 }
 

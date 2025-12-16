@@ -16,17 +16,26 @@ func (b *Batch[T]) SetFlushInterval(newInterval *time.Duration) error {
 		return nil
 	}
 
-	err := b.flushUnsafe()
-	if err != nil {
-		return err
+	if newInterval == nil {
+		b.stopChan <- struct{}{}
+		b.ticker = nil
+		b.flushInterval = newInterval
+		return b.startTicker()
+	}
+
+	// new interval is shorter than the time we are at since last flush
+	if b.lastFlushed.Add(*newInterval).Before(time.Now()) {
+		err := b.flushUnsafe()
+		if err != nil {
+			return err
+		}
+		b.lastFlushed = time.Now()
 	}
 
 	b.stopChan <- struct{}{}
 	b.ticker = nil
 	b.flushInterval = newInterval
-	b.startTicker() // won't error, ticker is set to nil
-
-	return nil
+	return b.startTicker() // automatically handles nil newInterval case
 }
 
 // Sets the capacity for the batch.
@@ -39,18 +48,12 @@ func (b *Batch[T]) SetCap(newCap uint32) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	// quick return, set flush interval and DON'T open the batch.
-	// let the user do that
-	if !b.batchOpen {
-		b.cap = newCap
-		return nil
-	}
-
+	b.cap = newCap
 	// we have enough space, just copy over the items
 	if uint32(len(b.batch)) < newCap {
-		items := b.copy()
+		itemsCopy := b.copy()
 		b.batch = make([]T, 0, newCap)
-		b.batch = append(b.batch, items...)
+		b.batch = append(b.batch, itemsCopy...)
 		return nil
 	}
 
