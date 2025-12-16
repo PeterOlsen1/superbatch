@@ -1,6 +1,9 @@
 package superbatch
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // Sets the current flush interval.
 //
@@ -45,6 +48,9 @@ func (b *Batch[T]) SetFlushInterval(newInterval *time.Duration) error {
 //
 // An error is returned if this flush errors
 func (b *Batch[T]) SetCap(newCap uint32) error {
+	if newCap == 0 {
+		return fmt.Errorf("cannot use capacity of 0")
+	}
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
