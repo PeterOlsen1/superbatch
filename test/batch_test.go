@@ -29,7 +29,6 @@ func TestBatchCapacityFlush(t *testing.T) {
 
 	for i := range 9 {
 		b.Add(1)
-		t.Log(b.Len())
 		if b.Len() != i+1 {
 			t.Error("Batch length does not match loop iteration")
 		}
@@ -69,14 +68,13 @@ func TestBatchIntervalFlush(t *testing.T) {
 	teardown(b, t)
 }
 
-// currently failing due to a deadlock
-// func TestBatchIntervalFlush10(t *testing.T) {
-// 	b := setupWithInterval(t, 1*time.Millisecond)
-// 	time.Sleep(time.Nanosecond * 11000000)
+func TestBatchIntervalFlush10(t *testing.T) {
+	b := setupWithInterval(t, 1*time.Millisecond)
+	time.Sleep(time.Nanosecond * 10500000)
 
-// 	if count != 10 {
-// 		t.Errorf("Count (%d) does not match 10", count)
-// 	}
+	if count != 10 {
+		t.Errorf("Count (%d) does not match 10", count)
+	}
 
-// 	teardown(b, t)
-// }
+	teardown(b, t)
+}
