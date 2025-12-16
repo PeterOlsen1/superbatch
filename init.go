@@ -101,8 +101,12 @@ func (b *Batch[T]) Close() error {
 
 	b.stopChan <- struct{}{}
 	b.flushUnsafe()
-	b.ticker.Stop()
+
+	if b.ticker != nil {
+		b.ticker.Stop()
+	}
 	b.ticker = nil
+
 	close(b.fullChan)
 	close(b.stopChan)
 	b.batchOpen = false
