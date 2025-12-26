@@ -22,7 +22,7 @@
 //	    }
 //
 //		interval := time.Second * 5
-//	    batch := superbatch.InitBatch[int](10, &interval, onFlush)
+//	    batch := superbatch.NewBatch[int](10, &interval, onFlush)
 //	    defer batch.Close()
 //
 //	    batch.Add(1)

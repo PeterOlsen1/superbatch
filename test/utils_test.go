@@ -15,7 +15,7 @@ func setup(t *testing.T) *sb.Batch[int] {
 		count += 1
 		return nil
 	}
-	b, err := sb.InitBatch(10, nil, batchFunc)
+	b, err := sb.NewBatch(10, nil, batchFunc)
 	if err != nil {
 		t.Fatalf("Failed to setup batch: %s", err)
 		return nil
@@ -33,7 +33,7 @@ func setupWithInterval(t *testing.T, i time.Duration) *sb.Batch[int] {
 		count += 1
 		return nil
 	}
-	b, err := sb.InitBatch(10, &i, batchFunc)
+	b, err := sb.NewBatch(10, &i, batchFunc)
 	if err != nil {
 		t.Fatalf("Failed to setup batch: %s", err)
 		return nil
