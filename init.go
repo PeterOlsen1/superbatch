@@ -119,7 +119,9 @@ func (b *Batch[T]) Close() error {
 	}
 	b.ticker = nil
 
-	b.pool.Shutdown()
+	if b.pool != nil {
+		b.pool.Shutdown()
+	}
 
 	close(b.fullChan)
 	close(b.stopChan)
