@@ -7,7 +7,7 @@ import (
 	sp "github.com/PeterOlsen1/superpool"
 )
 
-func InitBatch[T any](cfg BatchConfig[T]) (*Batch[T], error) {
+func NewBatch[T any](cfg BatchConfig[T]) (*Batch[T], error) {
 	if cfg.Cap == 0 {
 		return nil, fmt.Errorf("capacity cannot be 0")
 	}
