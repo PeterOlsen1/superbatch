@@ -3,6 +3,8 @@ package superbatch
 import (
 	"fmt"
 	"time"
+
+	sp "github.com/PeterOlsen1/superpool"
 )
 
 // Copies the contents of a batch array
@@ -41,9 +43,11 @@ func (b *Batch[T]) Add(item T) error {
 // If failed, the batch will NOT be reset, and an error returned.
 func (b *Batch[T]) flushUnsafe() error {
 	batchCopy := b.copy()
-	err := b.onFlush(batchCopy)
-	if err != nil {
-		return err
+	for _, e := range batchCopy {
+		err := b.onFlush(e)
+		if err != nil {
+			return err
+		}
 	}
 
 	b.lastFlushed = time.Now()
@@ -59,7 +63,50 @@ func (b *Batch[T]) Flush() error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
+	// if threaded, the pool is guaranteed to be created
+	if b.threaded {
+		return b.flushThreadedUnsafe()
+	}
 	return b.flushUnsafe()
+}
+
+func (b *Batch[T]) flushThreadedUnsafe() error {
+	batchCopy := b.copy()
+
+	// TODO: update to batch add later
+	for _, e := range batchCopy {
+		b.pool.Add(e)
+	}
+	b.pool.Wait()
+
+	// immediatley return first error, maybe not smart
+	for err := range b.pool.Errors() {
+		return err
+	}
+
+	b.lastFlushed = time.Now()
+	b.batch = make([]T, 0, b.cap)
+	return nil
+}
+
+// Threaded flush.
+//
+// All items are removed from the batch
+// and processed with a workerpool.
+func (b *Batch[T]) FlushThreaded() error {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	if b.pool == nil {
+		p, err := sp.NewPool(b.cap, 10, sp.EventHandler[T](b.onFlush))
+		if err != nil {
+			b.threaded = false
+		} else {
+			b.pool = p
+		}
+	}
+
+	return b.flushThreadedUnsafe()
 }
 
 // Flush all items according to custom function
@@ -72,9 +119,11 @@ func (b *Batch[T]) FlushCustom(onFlush FlushFunc[T]) error {
 
 	//apply custom flush func
 	batchCopy := b.copy()
-	err := onFlush(batchCopy)
-	if err != nil {
-		return err
+	for _, e := range batchCopy {
+		err := b.onFlush(e)
+		if err != nil {
+			return err
+		}
 	}
 
 	b.lastFlushed = time.Now()

@@ -3,22 +3,34 @@ package superbatch
 import (
 	"fmt"
 	"time"
+
+	sp "github.com/PeterOlsen1/superpool"
 )
 
-func InitBatch[T any](cap uint32, flushInterval *time.Duration, onFlush FlushFunc[T]) (*Batch[T], error) {
-	if cap == 0 {
+func InitBatch[T any](cfg BatchConfig[T]) (*Batch[T], error) {
+	if cfg.Cap == 0 {
 		return nil, fmt.Errorf("capacity cannot be 0")
 	}
 
 	b := &Batch[T]{
-		batch:         make([]T, 0, cap),
-		cap:           cap,
-		onFlush:       onFlush,
+		batch:         make([]T, 0, cfg.Cap),
+		cap:           cfg.Cap,
+		onFlush:       cfg.OnFlush,
 		fullChan:      make(chan struct{}),
 		stopChan:      make(chan struct{}),
 		batchOpen:     false,
-		flushInterval: flushInterval,
+		flushInterval: cfg.FlushInterval,
 		ticker:        nil,
+		threaded:      cfg.Threaded,
+	}
+
+	if cfg.Threaded {
+		p, err := sp.NewPool(cfg.Cap, 10, sp.EventHandler[T](cfg.OnFlush))
+		if err != nil {
+			b.threaded = false
+		} else {
+			b.pool = p
+		}
 	}
 
 	b.Open()
@@ -106,6 +118,8 @@ func (b *Batch[T]) Close() error {
 		b.ticker.Stop()
 	}
 	b.ticker = nil
+
+	b.pool.Shutdown()
 
 	close(b.fullChan)
 	close(b.stopChan)

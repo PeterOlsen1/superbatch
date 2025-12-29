@@ -3,9 +3,11 @@ package superbatch
 import (
 	"sync"
 	"time"
+
+	sp "github.com/PeterOlsen1/superpool"
 )
 
-type FlushFunc[T any] func([]T) error
+type FlushFunc[T any] func(T) error
 
 type Batch[T any] struct {
 	// The underlying sice that holds batch data
@@ -39,4 +41,17 @@ type Batch[T any] struct {
 	flushInterval *time.Duration
 
 	ticker *time.Ticker
+
+	// Config variable to be set if batches should be processed with worker pools
+	threaded bool
+
+	// pool to process batch with multiple threads if requested
+	pool *sp.Pool[T]
+}
+
+type BatchConfig[T any] struct {
+	Cap           uint32
+	FlushInterval *time.Duration
+	OnFlush       FlushFunc[T]
+	Threaded      bool
 }
