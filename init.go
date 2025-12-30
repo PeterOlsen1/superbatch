@@ -103,7 +103,7 @@ func (b *Batch[T]) startTicker() error {
 // Closes the batch.
 //
 // Once this signal is sent, the ticker will stop
-func (b *Batch[T]) Close() error {
+func (b *Batch[T]) Shutdown() error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 

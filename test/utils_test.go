@@ -54,7 +54,7 @@ func setupWithInterval(t *testing.T, i time.Duration) *sb.Batch[int] {
 
 // Teardown the test
 func teardown(b *sb.Batch[int], t *testing.T) {
-	err := b.Close()
+	err := b.Shutdown()
 	if err != nil {
 		t.Fatalf("Failed to teardown batch: %s", err)
 	}

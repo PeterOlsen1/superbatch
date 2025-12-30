@@ -23,7 +23,7 @@
 //
 //		interval := time.Second * 5
 //	    batch := superbatch.NewBatch[int](10, &interval, onFlush)
-//	    defer batch.Close()
+//	    defer batch.Shutdown()
 //
 //	    batch.Add(1)
 //	    batch.Add(2)

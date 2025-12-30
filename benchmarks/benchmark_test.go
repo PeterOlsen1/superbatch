@@ -68,7 +68,7 @@ func BenchmarkGoroutines(b *testing.B) {
 	}
 }
 
-// BenchmarkSequential-16    	   77817	     14602 ns/op	   20801 B/op	     300 allocs/op
+// BenchmarkSequential-16    	 3826318	       314.1 ns/op	       0 B/op	       0 allocs/op
 func BenchmarkSequential(b *testing.B) {
 	openFile()
 	defer closeFile()
