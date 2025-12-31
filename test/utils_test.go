@@ -11,7 +11,7 @@ import (
 // If creation fails, test fails.
 func setup(t *testing.T) *sb.Batch[int] {
 	count = 0
-	batchFunc := func(item int) error {
+	batchFunc := func(items []int) error {
 		count += 1
 		return nil
 	}
@@ -34,7 +34,7 @@ func setup(t *testing.T) *sb.Batch[int] {
 // already handled in the default setup() method.
 func setupWithInterval(t *testing.T, i time.Duration) *sb.Batch[int] {
 	count = 0
-	batchFunc := func(items int) error {
+	batchFunc := func(items []int) error {
 		count += 1
 		return nil
 	}

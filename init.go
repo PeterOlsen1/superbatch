@@ -25,7 +25,7 @@ func NewBatch[T any](cfg BatchConfig[T]) (*Batch[T], error) {
 	}
 
 	if cfg.Threaded {
-		p, err := sp.NewPool(cfg.Cap, 10, sp.EventHandler[T](cfg.OnFlush))
+		p, err := sp.NewPool(cfg.Cap, 10, sp.EventHandler[[]T](cfg.OnFlush))
 		if err != nil {
 			b.threaded = false
 		} else {

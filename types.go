@@ -7,7 +7,7 @@ import (
 	sp "github.com/PeterOlsen1/superpool"
 )
 
-type FlushFunc[T any] func(T) error
+type FlushFunc[T any] func([]T) error
 
 type Batch[T any] struct {
 	// The underlying sice that holds batch data
@@ -46,7 +46,7 @@ type Batch[T any] struct {
 	threaded bool
 
 	// pool to process batch with multiple threads if requested
-	pool *sp.Pool[T]
+	pool *sp.Pool[[]T]
 }
 
 type BatchConfig[T any] struct {

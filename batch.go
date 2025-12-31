@@ -43,11 +43,9 @@ func (b *Batch[T]) Add(item T) error {
 // If failed, the batch will NOT be reset, and an error returned.
 func (b *Batch[T]) flushUnsafe() error {
 	batchCopy := b.copy()
-	for _, e := range batchCopy {
-		err := b.onFlush(e)
-		if err != nil {
-			return err
-		}
+	err := b.onFlush(batchCopy)
+	if err != nil {
+		return err
 	}
 
 	b.lastFlushed = time.Now()
@@ -73,9 +71,19 @@ func (b *Batch[T]) Flush() error {
 func (b *Batch[T]) flushThreadedUnsafe() error {
 	batchCopy := b.copy()
 
-	// TODO: update to batch add later
+	step := max(b.cap/10, 1)
+	acc := make([]T, 0, step)
 	for _, e := range batchCopy {
-		b.pool.Add(e)
+		acc = append(acc, e)
+
+		if uint32(len(acc)) == step {
+			b.pool.Add(acc)
+			acc = make([]T, 0, step)
+		}
+	}
+
+	if len(acc) > 0 {
+		b.pool.Add(acc)
 	}
 	b.pool.Wait()
 
@@ -98,7 +106,7 @@ func (b *Batch[T]) FlushThreaded() error {
 	defer b.mu.Unlock()
 
 	if b.pool == nil {
-		p, err := sp.NewPool(b.cap, 10, sp.EventHandler[T](b.onFlush))
+		p, err := sp.NewPool(b.cap, 10, sp.EventHandler[[]T](b.onFlush))
 		if err != nil {
 			b.threaded = false
 		} else {
@@ -119,11 +127,9 @@ func (b *Batch[T]) FlushCustom(onFlush FlushFunc[T]) error {
 
 	//apply custom flush func
 	batchCopy := b.copy()
-	for _, e := range batchCopy {
-		err := b.onFlush(e)
-		if err != nil {
-			return err
-		}
+	err := b.onFlush(batchCopy)
+	if err != nil {
+		return err
 	}
 
 	b.lastFlushed = time.Now()

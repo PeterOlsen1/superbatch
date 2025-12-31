@@ -25,26 +25,56 @@ func closeFile() {
 	}
 }
 
-func dummyTask(i int) error {
-	_, err := file.WriteString("hello, world")
+func dummyTask(line string) error {
+	_, err := file.WriteString(line)
 	return err
 }
 
-// BenchmarkBatch-16    	  263919	      5040 ns/op	    8199 B/op	       0 allocs/op
+func dummyTaskBatch(lines []string) error {
+	for _, s := range lines {
+		_, err := file.WriteString(s)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// BenchmarkBatch-8   	  264058	      5449 ns/op	   17216 B/op	       0 allocs/op
 func BenchmarkBatch(b *testing.B) {
 	openFile()
 	defer closeFile()
 
-	cfg := sb.BatchConfig[int]{
+	cfg := sb.BatchConfig[string]{
 		Cap:     100,
-		OnFlush: dummyTask,
+		OnFlush: dummyTaskBatch,
 	}
 	batch, _ := sb.NewBatch(cfg)
 	defer batch.Shutdown()
 
 	for b.Loop() {
 		for range taskCount {
-			batch.Add(1)
+			batch.Add("hello, world!")
+		}
+	}
+}
+
+// BenchmarkThreadedBatch-8   	  290559	      4338 ns/op	   15646 B/op	       0 allocs/op
+func BenchmarkThreadedBatch(b *testing.B) {
+	openFile()
+	defer closeFile()
+
+	cfg := sb.BatchConfig[string]{
+		Cap:      100,
+		OnFlush:  dummyTaskBatch,
+		Threaded: true,
+	}
+	batch, _ := sb.NewBatch(cfg)
+	defer batch.Shutdown()
+
+	for b.Loop() {
+		for range taskCount {
+			batch.Add("hello, world!")
 		}
 	}
 }
@@ -58,7 +88,7 @@ func BenchmarkGoroutines(b *testing.B) {
 		done := make(chan struct{}, taskCount)
 		for range taskCount {
 			go func() {
-				dummyTask(1)
+				dummyTask("hello, world!")
 				done <- struct{}{}
 			}()
 		}
@@ -75,7 +105,7 @@ func BenchmarkSequential(b *testing.B) {
 
 	for b.Loop() {
 		for range taskCount {
-			dummyTask(1)
+			dummyTask("hello, world!")
 		}
 	}
 }
