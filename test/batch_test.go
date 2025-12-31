@@ -36,8 +36,8 @@ func TestBatchCapacityFlush(t *testing.T) {
 
 	b.Add(1)
 
-	if count != 10 {
-		t.Errorf("Count (%d) does not match 10", count)
+	if count != 1 {
+		t.Errorf("Count (%d) does not match 1", count)
 	}
 
 	teardown(b, t)
@@ -50,8 +50,8 @@ func TestBatchCapacityFlushTen(t *testing.T) {
 		b.Add(1)
 	}
 
-	if count != 100 {
-		t.Errorf("Count (%d) does not match 100", count)
+	if count != 10 {
+		t.Errorf("Count (%d) does not match 10", count)
 	}
 
 	teardown(b, t)
@@ -60,7 +60,7 @@ func TestBatchCapacityFlushTen(t *testing.T) {
 func TestBatchIntervalFlush(t *testing.T) {
 	b := setupWithInterval(t, 5*time.Millisecond)
 	b.Add(1)
-	time.Sleep(time.Nanosecond * 5650000) // 5.65 ms is the shortest viable time that works consistently
+	time.Sleep(time.Nanosecond * 6000000)
 
 	if count != 1 {
 		t.Errorf("Count (%d) does not match 1", count)

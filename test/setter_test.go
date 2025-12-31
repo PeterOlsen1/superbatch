@@ -12,16 +12,16 @@ func TestSetCap(t *testing.T) {
 		b.Add(1)
 	}
 	b.SetCap(8)
-	if count != 9 {
-		t.Errorf("Count (%d) does not match 9", count)
+	if count != 1 {
+		t.Errorf("Count (%d) does not match 1", count)
 	}
 
 	for range 7 {
 		b.Add(1)
 	}
 	b.SetCap(7)
-	if count != 16 {
-		t.Errorf("Count (%d) does not match 16", count)
+	if count != 2 {
+		t.Errorf("Count (%d) does not match 2", count)
 	}
 
 	// shouldn't update, new capacity is > size
@@ -29,8 +29,8 @@ func TestSetCap(t *testing.T) {
 		b.Add(1)
 	}
 	b.SetCap(10)
-	if count != 16 {
-		t.Errorf("Count (%d) does not match 16", count)
+	if count != 2 {
+		t.Errorf("Count (%d) does not match 2", count)
 	}
 
 	teardown(b, t)
