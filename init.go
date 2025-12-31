@@ -125,6 +125,9 @@ func (b *Batch[T]) Shutdown() error {
 
 	close(b.fullChan)
 	close(b.stopChan)
+	if b.flushed != nil {
+		close(b.flushed)
+	}
 	b.batchOpen = false
 	return nil
 }

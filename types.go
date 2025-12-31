@@ -47,6 +47,9 @@ type Batch[T any] struct {
 
 	// pool to process batch with multiple threads if requested
 	pool *sp.Pool[[]T]
+
+	// chan that the user can subscribe to, signaling when last flush happened
+	flushed chan struct{}
 }
 
 type BatchConfig[T any] struct {

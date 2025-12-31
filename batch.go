@@ -7,6 +7,15 @@ import (
 	sp "github.com/PeterOlsen1/superpool"
 )
 
+func (b *Batch[T]) notifyFlush() {
+	b.lastFlushed = time.Now()
+	if b.flushed == nil {
+		return
+	}
+
+	b.flushed <- struct{}{}
+}
+
 // Copies the contents of a batch array
 func (b *Batch[T]) copy() []T {
 	return append([]T(nil), b.batch...)
@@ -48,8 +57,9 @@ func (b *Batch[T]) flushUnsafe() error {
 		return err
 	}
 
-	b.lastFlushed = time.Now()
 	b.batch = make([]T, 0, b.cap)
+	b.notifyFlush()
+
 	return nil
 }
 
@@ -92,8 +102,8 @@ func (b *Batch[T]) flushThreadedUnsafe() error {
 		return err
 	}
 
-	b.lastFlushed = time.Now()
 	b.batch = make([]T, 0, b.cap)
+	b.notifyFlush()
 	return nil
 }
 
@@ -132,7 +142,7 @@ func (b *Batch[T]) FlushCustom(onFlush FlushFunc[T]) error {
 		return err
 	}
 
-	b.lastFlushed = time.Now()
 	b.batch = make([]T, 0, b.cap)
+	b.notifyFlush()
 	return nil
 }
